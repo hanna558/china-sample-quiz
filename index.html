@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>중국 샘플 행잉/관리 테스트</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Noto Sans KR',sans-serif;background:#f5f5f7;color:#1d1d1f;line-height:1.7;font-size:15px}
+  .header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#fff;padding:50px 40px 40px;text-align:center}
+  .header h1{font-size:2rem;font-weight:800;margin-bottom:8px}
+  .header .sub{font-size:.95rem;font-weight:300;opacity:.8}
+  .info-bar{background:#fff;max-width:860px;margin:-20px auto 0;border-radius:14px;padding:20px 30px;box-shadow:0 4px 20px rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;position:relative;z-index:1}
+  .info-bar .info-item{text-align:center}
+  .info-bar .info-label{font-size:.75rem;color:#999;font-weight:500;letter-spacing:.5px}
+  .info-bar .info-value{font-size:1.1rem;font-weight:700;color:#0f3460}
+  .info-bar input[type="text"]{border:none;border-bottom:2px solid #ddd;padding:4px 8px;font-size:1.1rem;font-family:inherit;font-weight:600;width:160px;text-align:center;outline:none}
+  .info-bar input[type="text"]:focus{border-color:#0f3460}
+  .container{max-width:860px;margin:30px auto;padding:0 20px 80px}
+  .section-title{background:#0f3460;color:#fff;padding:14px 24px;border-radius:12px 12px 0 0;font-size:1.05rem;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+  .section-title .pts{font-size:.85rem;font-weight:400;background:rgba(255,255,255,.2);padding:3px 12px;border-radius:10px}
+  .q-card{background:#fff;border:1px solid #e5e5e5;border-top:none;padding:24px 28px}
+  .q-card:last-of-type{border-radius:0 0 12px 12px;margin-bottom:28px}
+  .q-card+.section-title{margin-top:28px}
+  .q-card+.q-card{border-top:1px dashed #eee}
+  .q-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eef2f7;color:#0f3460;border-radius:50%;font-size:.85rem;font-weight:700;margin-right:10px;flex-shrink:0}
+  .q-text{font-weight:600;font-size:.95rem;margin-bottom:14px;display:flex;align-items:flex-start}
+  .q-text span{flex:1}
+  .q-points{font-size:.75rem;color:#999;font-weight:400;white-space:nowrap;margin-left:8px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-left:38px}
+  .choices.single-col{grid-template-columns:1fr}
+  .choice{display:flex;align-items:flex-start;gap:8px;padding:10px 14px;border:1.5px solid #e5e5e5;border-radius:8px;cursor:pointer;transition:all .15s;font-size:.9rem}
+  .choice:hover{border-color:#b0c4de;background:#f8fafd}
+  .choice input[type="radio"]{margin-top:3px;flex-shrink:0}
+  .choice.correct{border-color:#2ecc71;background:#eefff4}
+  .choice.wrong{border-color:#e74c3c;background:#ffeef0}
+  .answer-reveal{display:none;margin-top:10px;margin-left:38px;padding:10px 14px;border-radius:8px;font-size:.85rem}
+  .answer-reveal.correct{background:#eefff4;border:1px solid #2ecc71;color:#1a7a3a}
+  .answer-reveal.wrong{background:#fff8e6;border:1px solid #f5a623;color:#8a6d10}
+  .submit-area{text-align:center;padding:40px 0}
+  .submit-btn{background:#0f3460;color:#fff;border:none;padding:16px 60px;border-radius:12px;font-size:1.1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(15,52,96,.3)}
+  .submit-btn:hover{background:#16213e;transform:translateY(-1px)}
+  .score-board{display:none;background:#fff;border-radius:16px;padding:40px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.1);margin-bottom:30px}
+  .score-board .big-score{font-size:3.5rem;font-weight:800;color:#0f3460}
+  .score-board .score-label{font-size:.9rem;color:#999;margin-top:4px}
+  .grade{display:inline-block;margin-top:16px;padding:8px 24px;border-radius:20px;font-size:1rem;font-weight:700}
+  .grade.pass{background:#eefff4;color:#2ecc71;border:2px solid #2ecc71}
+  .grade.fail{background:#ffeef0;color:#e74c3c;border:2px solid #e74c3c}
+  .reset-btn{display:none;margin:20px auto;background:#fff;color:#0f3460;border:2px solid #0f3460;padding:12px 40px;border-radius:10px;font-size:1rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s}
+  .reset-btn:hover{background:#0f3460;color:#fff}
+  @media print{body{background:#fff}.header{padding:30px}.info-bar{box-shadow:none;border:1px solid #ddd}.submit-area,.score-board,.reset-btn{display:none!important}.q-card{page-break-inside:avoid}.choice{border-color:#ccc}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>중국 샘플 행잉 / 관리 테스트</h1>
+  <p class="sub">PB 그룹 · 다나앤페타 · 지재 · 마치마라 · 퀸셀 · 베르다</p>
+</div>
+
+<div class="info-bar">
+  <div class="info-item"><div class="info-label">응시자</div><input type="text" id="examinee" placeholder="이름 입력"></div>
+  <div class="info-item"><div class="info-label">응시일</div><div class="info-value" id="exam-date"></div></div>
+  <div class="info-item"><div class="info-label">총 문항</div><div class="info-value">25문항</div></div>
+  <div class="info-item"><div class="info-label">총 배점</div><div class="info-value">100점</div></div>
+  <div class="info-item"><div class="info-label">합격 기준</div><div class="info-value">80점 이상</div></div>
+</div>
+
+<div class="container">
+  <div class="score-board" id="scoreBoard">
+    <div class="big-score" id="finalScore">0점</div>
+    <div class="score-label">/ 100점</div>
+    <div class="grade" id="gradeLabel"></div>
+  </div>
+
+  <!-- ═══════ PART 1: 공통 기본 (20점) ═══════ -->
+  <div class="section-title">PART 1. 공통 기본 지식 <span class="pts">20점</span></div>
+
+  <div class="q-card" data-answer="2" data-points="4">
+    <div class="q-text"><span class="q-num">1</span><span>중국 샘플 행잉 시 옷걸이의 올바른 방향은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="q1" value="1"> 볼록한 부분이 뒤쪽</label>
+      <label class="choice"><input type="radio" name="q1" value="2"> 볼록한 부분이 앞쪽</label>
+      <label class="choice"><input type="radio" name="q1" value="3"> 방향 상관없음</label>
+      <label class="choice"><input type="radio" name="q1" value="4"> 볼록한 부분이 왼쪽</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="3" data-points="4">
+    <div class="q-text"><span class="q-num">2</span><span>장끼에 기입하는 가격의 기준은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="q2" value="1"> 실물 태그에 적힌 가격</label>
+      <label class="choice"><input type="radio" name="q2" value="2"> 담당자에게 구두 확인한 가격</label>
+      <label class="choice"><input type="radio" name="q2" value="3"> 시트에 적힌 가격</label>
+      <label class="choice"><input type="radio" name="q2" value="4"> 직접 판단한 예상 가격</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="2" data-points="4">
+    <div class="q-text"><span class="q-num">3</span><span>장끼의 컬러·사이즈 작성 기준으로 올바른 것은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q3" value="1"> 시트에 적힌 컬러·사이즈를 그대로 기입</label>
+      <label class="choice"><input type="radio" name="q3" value="2"> 실제 입고된 샘플의 실물 컬러·사이즈를 기준으로 기입</label>
+      <label class="choice"><input type="radio" name="q3" value="3"> 담당자 지시에 따라 기입</label>
+      <label class="choice"><input type="radio" name="q3" value="4"> 업체가 보낸 패킹리스트 그대로 기입</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="3" data-points="4">
+    <div class="q-text"><span class="q-num">4</span><span>중국 샘플이 도착하는 일반적인 시간대는?</span><span class="q-points">(4점)</span></div>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="q4" value="1"> 오전 9~10시</label>
+      <label class="choice"><input type="radio" name="q4" value="2"> 오전 11~12시</label>
+      <label class="choice"><input type="radio" name="q4" value="3"> 오후 2~3시 이후</label>
+      <label class="choice"><input type="radio" name="q4" value="4"> 오후 5~6시</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="4" data-points="4">
+    <div class="q-text"><span class="q-num">5</span><span>행잉 시 행거 분류 기준으로 올바른 것은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q5" value="1"> 상품 카테고리별로 분류</label>
+      <label class="choice"><input type="radio" name="q5" value="2"> 컬러별로 분류</label>
+      <label class="choice"><input type="radio" name="q5" value="3"> 입고 순서대로 행잉</label>
+      <label class="choice"><input type="radio" name="q5" value="4"> 브랜드별·업체별로 분류하여 행잉</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <!-- ═══════ PART 2: 다나앤페타/지재 (32점) ═══════ -->
+  <div class="section-title">PART 2. 다나앤페타 / 지재 <span class="pts">32점</span></div>
+
+  <div class="q-card" data-answer="2" data-points="4">
+    <div class="q-text"><span class="q-num">6</span><span>다나앤페타와 지재의 중국 샘플을 받는 업체명은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="q6" value="1"> 한우리</label>
+      <label class="choice"><input type="radio" name="q6" value="2"> 유위</label>
+      <label class="choice"><input type="radio" name="q6" value="3"> 제이티엘</label>
+      <label class="choice"><input type="radio" name="q6" value="4"> 헤아</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="1" data-points="4">
+    <div class="q-text"><span class="q-num">7</span><span>다나/지재 유위 샘플 도착 시 포장 상태는?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q7" value="1"> 다나/지재 구분 없이 한 박스에 혼합 포장</label>
+      <label class="choice"><input type="radio" name="q7" value="2"> 다나/지재 각각 별도 박스로 분리 도착</label>
+      <label class="choice"><input type="radio" name="q7" value="3"> 상품별로 개별 포장하여 도착</label>
+      <label class="choice"><input type="radio" name="q7" value="4"> 업체별로 분류되어 도착</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="3" data-points="4">
+    <div class="q-text"><span class="q-num">8</span><span>다나/지재 시트에서 이미지(사진)를 확인하는 주된 목적은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q8" value="1"> 상세페이지 제작용 사진 선별</label>
+      <label class="choice"><input type="radio" name="q8" value="2"> 장끼에 사진을 부착하기 위해</label>
+      <label class="choice"><input type="radio" name="q8" value="3"> 행잉된 샘플과 동일한 상품인지 대조 확인</label>
+      <label class="choice"><input type="radio" name="q8" value="4"> 불량 여부를 사진으로 판단하기 위해</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="4" data-points="4">
+    <div class="q-text"><span class="q-num">9</span><span>시트에는 "블루(L), 네이비(XL)"가 예정이지만 실제로 "블루(Free), 네이비(Free)"가 입고된 경우, 올바른 처리 방법은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q9" value="1"> 시트 내용 그대로 장끼 작성</label>
+      <label class="choice"><input type="radio" name="q9" value="2"> 담당자에게 전화해서 확인 후 처리</label>
+      <label class="choice"><input type="radio" name="q9" value="3"> 시트의 컬러·사이즈를 직접 수정</label>
+      <label class="choice"><input type="radio" name="q9" value="4"> K열에 실제 입고 정보를 기입하고, 장끼는 실물 기준으로 작성</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="3" data-points="4">
+    <div class="q-text"><span class="q-num">10</span><span>시트 확인 시 폴더 탐색 범위로 올바른 것은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q10" value="1"> 해당 월 폴더만 확인</label>
+      <label class="choice"><input type="radio" name="q10" value="2"> 해당 월과 다음 월 폴더만 확인</label>
+      <label class="choice"><input type="radio" name="q10" value="3"> 해당 월 포함 인근 월 폴더 모두 확인</label>
+      <label class="choice"><input type="radio" name="q10" value="4"> 해당 연도 전체 폴더 확인</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="2" data-points="4">
+    <div class="q-text"><span class="q-num">11</span><span>다나/지재 중국 샘플의 기본 장끼 유형은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="q11" value="1"> 인쇄 장끼</label>
+      <label class="choice"><input type="radio" name="q11" value="2"> 수기 장끼 (포스트잇)</label>
+      <label class="choice"><input type="radio" name="q11" value="3"> 장끼 부착 불필요</label>
+      <label class="choice"><input type="radio" name="q11" value="4"> 스티커 장끼</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="2" data-points="4">
+    <div class="q-text"><span class="q-num">12</span><span>다나앤페타 샘관마 작성 시 동대문 샘플과 비교하여 추가로 표시해야 하는 것은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q12" value="1"> 반납일과 주소</label>
+      <label class="choice"><input type="radio" name="q12" value="2"> 매입여부에 ㅇ 표시</label>
+      <label class="choice"><input type="radio" name="q12" value="3"> 중국 업체 연락처</label>
+      <label class="choice"><input type="radio" name="q12" value="4"> 환율 정보</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="3" data-points="4">
+    <div class="q-text"><span class="q-num">13</span><span>다나/지재 2차 노티(샘관마 완료) 시 반드시 함께 전달해야 하는 것은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q13" value="1"> 행잉 사진</label>
+      <label class="choice"><input type="radio" name="q13" value="2"> 장끼 사진</label>
+      <label class="choice"><input type="radio" name="q13" value="3"> 특이사항을 기입한 시트 링크</label>
+      <label class="choice"><input type="radio" name="q13" value="4"> 패킹리스트 사본</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <!-- ═══════ PART 3: 마치마라 (20점) ═══════ -->
+  <div class="section-title">PART 3. 마치마라 <span class="pts">20점</span></div>
+
+  <div class="q-card" data-answer="2" data-points="4">
+    <div class="q-text"><span class="q-num">14</span><span>마치마라 중국 샘플의 소싱 업체와 배송 박스는?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q14" value="1"> 유위 / 유위 박스</label>
+      <label class="choice"><input type="radio" name="q14" value="2"> 한우리 / 형창물류 박스</label>
+      <label class="choice"><input type="radio" name="q14" value="3"> 제이티엘 / 택배 박스</label>
+      <label class="choice"><input type="radio" name="q14" value="4"> 헤아 / 일반 박스</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="4" data-points="4">
+    <div class="q-text"><span class="q-num">15</span><span>마치마라 중국 입고 제품의 장끼(영수증) 처리 방법은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q15" value="1"> 수기 장끼를 작성하여 부착</label>
+      <label class="choice"><input type="radio" name="q15" value="2"> 인쇄 장끼를 잘라서 부착</label>
+      <label class="choice"><input type="radio" name="q15" value="3"> 패킹리스트를 장끼로 사용</label>
+      <label class="choice"><input type="radio" name="q15" value="4"> 장끼가 없음 (부착하지 않음)</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="1" data-points="4">
+    <div class="q-text"><span class="q-num">16</span><span>마치마라 샘관마에서 중국 단가를 입력하면 어떻게 되는가?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q16" value="1"> 나머지 단가 관련 열이 자동으로 계산되어 채워진다</label>
+      <label class="choice"><input type="radio" name="q16" value="2"> 담당자에게 자동으로 노티가 발송된다</label>
+      <label class="choice"><input type="radio" name="q16" value="3"> 수동으로 나머지 열을 모두 직접 기입해야 한다</label>
+      <label class="choice"><input type="radio" name="q16" value="4"> 단가만 기록되고 다른 변화는 없다</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="2" data-points="4">
+    <div class="q-text"><span class="q-num">17</span><span>마치마라 샘관마에서 "차수"를 작성하는 기준은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q17" value="1"> 입고일 기준 당일 날짜</label>
+      <label class="choice"><input type="radio" name="q17" value="2"> 입고일 기준 차주 화요일 날짜</label>
+      <label class="choice"><input type="radio" name="q17" value="3"> 입고일 기준 차주 월요일 날짜</label>
+      <label class="choice"><input type="radio" name="q17" value="4"> 패킹리스트에 적힌 날짜</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="1" data-points="4">
+    <div class="q-text"><span class="q-num">18</span><span>마치마라 행잉 완료 후 포스트잇에 적는 날짜 기준은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q18" value="1"> 품평 예정일 (차주 화요일)</label>
+      <label class="choice"><input type="radio" name="q18" value="2"> 입고일 당일</label>
+      <label class="choice"><input type="radio" name="q18" value="3"> 행잉 완료일</label>
+      <label class="choice"><input type="radio" name="q18" value="4"> 샘관마 작성일</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <!-- ═══════ PART 4: 퀸셀/베르다 (20점) ═══════ -->
+  <div class="section-title">PART 4. 퀸셀 / 베르다 <span class="pts">20점</span></div>
+
+  <div class="q-card" data-answer="4" data-points="4">
+    <div class="q-text"><span class="q-num">19</span><span>퀸셀/베르다 중국 샘플의 소싱 업체로 올바른 조합은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q19" value="1"> 유위 / 한우리</label>
+      <label class="choice"><input type="radio" name="q19" value="2"> 한우리 / 유위 / 헤아</label>
+      <label class="choice"><input type="radio" name="q19" value="3"> 제이티엘 / 헤아</label>
+      <label class="choice"><input type="radio" name="q19" value="4"> 한우리 / 제이티엘 / 헤아</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="3" data-points="4">
+    <div class="q-text"><span class="q-num">20</span><span>퀸셀/베르다 포스트잇 작성 양식으로 올바른 것은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q20" value="1"> 브랜드 날짜 중국 샘플</label>
+      <label class="choice"><input type="radio" name="q20" value="2"> 브랜드 날짜 품평 예정</label>
+      <label class="choice"><input type="radio" name="q20" value="3"> 날짜 브랜드 중국 샘플 (업체명)</label>
+      <label class="choice"><input type="radio" name="q20" value="4"> 업체명 날짜 브랜드</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="3" data-points="4">
+    <div class="q-text"><span class="q-num">21</span><span>퀸셀/베르다 샘관마에서 단가 입력 시 가장 주의해야 할 점은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q21" value="1"> 원화로 환산하여 입력해야 한다</label>
+      <label class="choice"><input type="radio" name="q21" value="2"> 모든 업체의 단가를 한꺼번에 입력해야 한다</label>
+      <label class="choice"><input type="radio" name="q21" value="3"> 중국 단가 부분에 입력해야 하며, 단가v- 칸에 쓰면 안 된다</label>
+      <label class="choice"><input type="radio" name="q21" value="4"> 단가를 입력하기 전에 담당자 승인을 받아야 한다</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="3" data-points="4">
+    <div class="q-text"><span class="q-num">22</span><span>퀸셀/베르다 샘관마를 업체끼리 나눠서 작성해야 하는 이유는?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q22" value="1"> 배송 추적을 위해</label>
+      <label class="choice"><input type="radio" name="q22" value="2"> 담당자가 다르기 때문에</label>
+      <label class="choice"><input type="radio" name="q22" value="3"> 업체별로 단가 함숫값(계산 공식)이 다르기 때문에</label>
+      <label class="choice"><input type="radio" name="q22" value="4"> 시트 용량 제한 때문에</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="1" data-points="4">
+    <div class="q-text"><span class="q-num">23</span><span>퀸셀/베르다 인쇄 장끼를 자를 때 올바른 방법은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q23" value="1"> 같은 품번끼리 잘라서 부착</label>
+      <label class="choice"><input type="radio" name="q23" value="2"> 한 행씩 잘라서 부착</label>
+      <label class="choice"><input type="radio" name="q23" value="3"> 브랜드별로 묶어서 부착</label>
+      <label class="choice"><input type="radio" name="q23" value="4"> 자르지 않고 전체를 접어서 부착</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <!-- ═══════ PART 5: 종합 응용 (8점) ═══════ -->
+  <div class="section-title">PART 5. 종합 응용 <span class="pts">8점</span></div>
+
+  <div class="q-card" data-answer="2" data-points="4">
+    <div class="q-text"><span class="q-num">24</span><span>다나/지재에서 인쇄 장끼를 사용한 경우에도 반드시 추가로 해야 하는 작업은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q24" value="1"> 수기 장끼를 따로 한 장 더 작성</label>
+      <label class="choice"><input type="radio" name="q24" value="2"> 구글 드라이브 원본 시트에 특이사항 기재</label>
+      <label class="choice"><input type="radio" name="q24" value="3"> 인쇄 장끼 사본을 보관</label>
+      <label class="choice"><input type="radio" name="q24" value="4"> 추가 작업 불필요</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="q-card" data-answer="4" data-points="4">
+    <div class="q-text"><span class="q-num">25</span><span>다음 중 브랜드별 컬러 기입 방식이 올바르게 짝지어진 것은?</span><span class="q-points">(4점)</span></div>
+    <div class="choices single-col">
+      <label class="choice"><input type="radio" name="q25" value="1"> 다나/지재: 중국어 복붙 &nbsp;|&nbsp; 퀸셀/베르다: 컬러코드(BK, NV 등)</label>
+      <label class="choice"><input type="radio" name="q25" value="2"> 다나/지재: 한글 풀네임 &nbsp;|&nbsp; 퀸셀/베르다: 한글 풀네임</label>
+      <label class="choice"><input type="radio" name="q25" value="3"> 다나/지재: 컬러코드 &nbsp;|&nbsp; 퀸셀/베르다: 컬러코드</label>
+      <label class="choice"><input type="radio" name="q25" value="4"> 다나/지재: 컬러코드(BK, NV 등) &nbsp;|&nbsp; 퀸셀/베르다: 중국어 복붙</label>
+    </div>
+    <div class="answer-reveal"></div>
+  </div>
+
+  <div class="submit-area">
+    <button class="submit-btn" onclick="gradeExam()">채점하기</button>
+  </div>
+  <button class="reset-btn" id="resetBtn" onclick="resetExam()">다시 풀기</button>
+</div>
+
+<script>
+document.getElementById('exam-date').textContent = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
+
+const explanations = {
+  1: '옷걸이 볼록한 부분이 앞쪽으로 오도록 행잉합니다.',
+  2: '장끼 가격은 반드시 시트에 적힌 가격으로 기입합니다.',
+  3: '시트 컬러·사이즈는 참고용이며, 실제 입고된 샘플의 실물을 기준으로 작성합니다.',
+  4: '중국 샘플은 보통 오후 2~3시 이후에 도착합니다.',
+  5: '브랜드별·업체별로 행거를 분리하여 행잉합니다.',
+  6: '유위는 다나/지재가 중국에서 샘플을 받는 업체명입니다.',
+  7: '다나/지재 구분 없이 한 박스에 담겨 도착하므로 개봉 후 분류가 필요합니다.',
+  8: '시트의 이미지를 보며 행잉된 샘플과 같은 상품인지 대조 확인하는 것이 주된 목적입니다.',
+  9: 'K열에 실제 입고 정보를 기입하고, 장끼는 실물 컬러·사이즈 기준으로 작성합니다.',
+  10:'2월이어도 1월, 3월 폴더에 샘플이 있을 수 있으므로 인근 폴더 모두 확인합니다.',
+  11:'기본적으로 중국 샘플은 수기 장끼(포스트잇)를 제작합니다. 별도 인쇄물 전달 시에만 인쇄 장끼를 사용합니다.',
+  12:'동대문과 동일하게 기입하되, 중국 샘플은 매입여부에 ㅇ 표시를 추가로 합니다.',
+  13:'2차 노티 시 특이사항을 기입한 시트가 어떤 시트인지 링크를 함께 전달합니다.',
+  14:'마치마라는 한우리에서만 소싱하며 형창물류 박스로 도착합니다.',
+  15:'마치마라 중국 입고 제품은 장끼(영수증)가 없습니다.',
+  16:'중국 단가를 입력하면 나머지 단가 관련 열(Q~S열, J열)이 자동으로 계산되어 채워집니다.',
+  17:'입고일 기준 차주 화요일 날짜로 작성합니다. 예: 입고일 3/19 → 차주 화요일 3/24 → 03_4N',
+  18:'마치마라 포스트잇에는 품평 예정일(차주 화요일)을 적습니다. 예: "마치마라 3/23 품평 예정"',
+  19:'퀸셀/베르다 소싱 업체는 한우리, 제이티엘, 헤아 3곳입니다.',
+  20:'퀸셀/베르다 포스트잇 양식: "날짜_브랜드 중국 샘플 (업체명)" — 업체명을 함께 표기합니다.',
+  21:'중국 단가 부분에 입력해야 하며, 단가v- 칸에 쓰면 계산이 잘못됩니다.',
+  22:'업체별로 단가 함숫값(계산 공식)이 다르기 때문에 반드시 업체끼리 나눠서 작성합니다.',
+  23:'같은 품번끼리 잘라서 부착합니다. 한 행씩 자르기 ❌',
+  24:'인쇄 장끼를 붙여도 구글 드라이브 원본 시트에 특이사항 기재는 필수입니다.',
+  25:'다나/지재는 컬러코드(BK, NV 등)를 사용하고, 퀸셀/베르다는 샘플 리스트의 중국어를 그대로 복붙합니다.'
+};
+
+function gradeExam(){
+  let total = 0;
+  const cards = document.querySelectorAll('.q-card');
+  cards.forEach((card, i) => {
+    const qNum = i + 1;
+    const correctVal = card.dataset.answer;
+    const points = parseInt(card.dataset.points);
+    const selected = card.querySelector('input[type="radio"]:checked');
+    const selectedVal = selected ? selected.value : '';
+    const isCorrect = selectedVal === correctVal;
+    if(isCorrect) total += points;
+
+    card.querySelectorAll('.choice').forEach(c => {
+      const inp = c.querySelector('input');
+      if(inp.value === correctVal) c.classList.add('correct');
+      else if(inp.checked) c.classList.add('wrong');
+    });
+
+    const reveal = card.querySelector('.answer-reveal');
+    reveal.style.display = 'block';
+    reveal.className = 'answer-reveal ' + (isCorrect ? 'correct' : 'wrong');
+    reveal.innerHTML = (isCorrect ? '✅ 정답! ' : '❌ 오답 — ') + explanations[qNum];
+  });
+
+  const board = document.getElementById('scoreBoard');
+  board.style.display = 'block';
+  document.getElementById('finalScore').textContent = total + '점';
+  const label = document.getElementById('gradeLabel');
+  label.textContent = total >= 80 ? '합격' : '불합격';
+  label.className = 'grade ' + (total >= 80 ? 'pass' : 'fail');
+
+  document.getElementById('resetBtn').style.display = 'block';
+  document.querySelector('.submit-btn').style.display = 'none';
+  board.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function resetExam(){
+  document.querySelectorAll('.q-card').forEach(card => {
+    card.querySelectorAll('input[type="radio"]').forEach(i => i.checked = false);
+    card.querySelectorAll('.choice').forEach(c => c.classList.remove('correct','wrong'));
+    card.querySelector('.answer-reveal').style.display = 'none';
+  });
+  document.getElementById('scoreBoard').style.display = 'none';
+  document.getElementById('resetBtn').style.display = 'none';
+  document.querySelector('.submit-btn').style.display = '';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
